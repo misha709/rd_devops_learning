@@ -61,7 +61,7 @@ networks:
   ![Docker PS Result](images/docker_ps_result.png)
 
 ### Step 4
-- Run browser and go to http://localhost:8080/
+- Open a browser and go to http://localhost:8080/
  ![Jenkins Login](images/jenkins_login.png)
 - To get the password, open a terminal and run the following command:
  `docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
@@ -69,3 +69,43 @@ networks:
 - Set your username and password
 - After completing all steps, you should see the home screen:
   ![Jenkins Home](images/jenkins_home.png)
+
+
+## Task 2: Configure Freestyle Job
+
+### Step 1: Create a New Job
+- Click "+ New Item"
+- Enter the name "Simple Freestyle Job" and select "Freestyle project"
+  ![Jenkins Create Job](images/task2/create_job.png)
+- [Optional] On the next screen, set up the General info
+
+### Step 2: Set Up Source Code Management
+  - Set up the URL to your fork of the project
+  - Check that the branch name matches (*by default it could be master)
+  ![Jenkins Setup Source Code Management](images/task2/setup_source_code_job.png)
+
+### Step 3: Set Up Build Steps
+  - Add a single step "Execute shell"
+  - Inside the Command field, insert the following code:
+  ```
+  cd complete
+  chmod +x mvnw
+  ./mvnw clean install
+  ```
+
+### Step 4: Set Up Post-build Actions
+ - Add "Archive the artifacts"
+ - Set Files to archive: `complete/target/*.jar`
+
+### Step 5: Build and Download Artifact
+ - Save the job
+ - Click "Build Now"
+ - Go to the last successful build
+   ![Jenkins Success Job Build](images/task2/success_job_build.png)
+ - Download `spring-boot-complete-0.0.1-SNAPSHOT.jar`
+
+### Step 6 [Optional]: Run Artifact on Windows
+- Install JDK 21 https://www.oracle.com/ua/java/technologies/downloads/#jdk21-windows
+- Open a terminal and navigate to the folder containing `spring-boot-complete-0.0.1-SNAPSHOT.jar`
+- Run the command `java -jar .\spring-boot-complete-0.0.1-SNAPSHOT.jar --server.port=8081`
+  ![Jenkins Run Server](images/task2/run_server.png)
