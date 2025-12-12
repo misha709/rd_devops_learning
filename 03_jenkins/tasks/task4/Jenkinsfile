@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+    environment {
+      TG_TOKEN    = credentials('tg-bot-token')
+      TG_CHAT_IDS = credentials('tg-chat-ids')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'dotnet restore'
+                sh 'dotnet build --no-restore'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'dotnet test --no-build --no-restore --collect "XPlat Code Coverage"'
+            }
+            post {
+                always {
+                    recordCoverage(tools: [[parser: 'COBERTURA', pattern: '**/*.xml']], sourceDirectories: [[path: 'CinemaManagement.Tests/TestResults']])
+                }
+                failure {
+                  script { notifyTelegram("❌ TESTS FAILED", "Tests failed") }
+                }
+            }
+        }
+
+        stage('Publish') {
+          steps {
+            sh '''
+              set -eux
+        
+              OUT_DIR="artifacts/dist"
+              ARCHIVE="cm-${BUILD_NUMBER}.tar.gz"
+        
+              rm -rf artifacts
+              mkdir -p "$OUT_DIR"
+        
+              dotnet publish ./CinemaManagement.Web/CinemaManagement.Web.csproj \
+                -c Release \
+                --no-restore \
+                -o "$OUT_DIR"
+        
+              tar -czf "$ARCHIVE" -C artifacts dist
+              ls -la "$ARCHIVE"
+            '''
+          }
+          post {
+            success {
+              archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
+              script { notifyTelegram("✅ SUCCESS", "Build succeeded") }
+            
+            }
+            failure {
+              script { notifyTelegram("❌ FAILED", "Build failed") }
+            }
+            aborted {
+              script { notifyTelegram("⚪ ABORTED", "Build aborted") }
+            }
+            unstable {
+              script { notifyTelegram("🟡 UNSTABLE", "Build unstable") }
+            }
+          }
+        }
+
+    }    
+}
+
+def notifyTelegram(String status, String details) {
+  withEnv(["TG_STATUS=${status}", "TG_DETAILS=${details}"]) {
+    sh '''
+      set +x
+
+      TEXT="${TG_STATUS}
+            Job: ${JOB_NAME}
+            Build: #${BUILD_NUMBER}
+            ${TG_DETAILS}
+            URL: ${BUILD_URL}"
+
+      echo "$TG_CHAT_IDS" | tr ',' '\n' | while read CHAT_ID; do
+        [ -n "$CHAT_ID" ] && curl -sS -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
+          -d "chat_id=$CHAT_ID" \
+          --data-urlencode "text=$TEXT"
+      done
+    '''
+  }
+}
