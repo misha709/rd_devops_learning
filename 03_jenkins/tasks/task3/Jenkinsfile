@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'dotnet restore'
+                sh 'dotnet build --no-restore'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'dotnet test --no-build --no-restore --collect "XPlat Code Coverage"'
+            }
+            post {
+                always {
+                    recordCoverage(tools: [[parser: 'COBERTURA', pattern: '**/*.xml']], sourceDirectories: [[path: 'CinemaManagement.Tests/TestResults']])
+                }
+            }
+        }
+
+        stage('Publish') {
+          steps {
+            sh '''
+              set -eux
+        
+              OUT_DIR="artifacts/dist"
+              ARCHIVE="cm-${BUILD_NUMBER}.tar.gz"
+        
+              rm -rf artifacts
+              mkdir -p "$OUT_DIR"
+        
+              dotnet publish ./CinemaManagement.Web/CinemaManagement.Web.csproj \
+                -c Release \
+                --no-restore \
+                -o "$OUT_DIR"
+        
+              tar -czf "$ARCHIVE" -C artifacts dist
+              ls -la "$ARCHIVE"
+            '''
+          }
+          post {
+            success {
+              archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
+            }
+          }
+        }
+
+    }    
+}
