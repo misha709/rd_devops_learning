@@ -101,5 +101,90 @@ WantedBy=multi-user.target
 ### Task 3: System Resource Monitoring Script
 Write a script to monitor system resource usage and save the results to a file.
 
+#### Step 1: Create System Monitoring Script
+- Create script file `/home/vagrant/scripts/`[system-monitor.sh](./system-monitor.sh).
+- Give execution rights to script: `chmod +x /home/vagrant/scripts/system-monitor.sh`
+- Test the script: `/home/vagrant/scripts/system-monitor.sh &`
+- Check logs: `tail -f /home/vagrant/scripts/system-monitor.log`
+
+#### Step 2: Create Systemd Service (Optional)
+- Create new service: `sudo nano /etc/systemd/system/system-monitor.service`
+- Add the following service configuration:
+```
+[Unit]
+Description=System Resource Monitoring Service
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=vagrant
+ExecStart=/home/vagrant/scripts/system-monitor.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Run commands:
+- Reload systemd: `sudo systemctl daemon-reload`
+- Start service: `sudo systemctl start system-monitor`
+- Check status: `sudo systemctl status system-monitor`
+- Enable on boot: `sudo systemctl enable system-monitor`
+- Check logs: `tail -f /home/vagrant/scripts/system-monitor.log`
+
+Example log output:
+```
+[2025-12-23 11:08:50] CPU: 3.8% | Memory: 14.95% (294MB/1967MB) | Disk: 16%
+[2025-12-23 11:09:43] CPU: 0.0% | Memory: 15.20% (299MB/1967MB) | Disk: 16%
+[2025-12-23 11:09:51] CPU: 8.7% | Memory: 15.25% (300MB/1967MB) | Disk: 16%
+```
+
 ### Task 4: Nginx Access Log Rotation
 Configure rotation for the Nginx access log file.
+
+#### Step 1: Install Nginx (if not already installed)
+```bash
+sudo apt update
+sudo apt install nginx -y
+```
+
+#### Step 2: Create Logrotate Configuration
+- Create a custom logrotate configuration: `sudo nano /etc/logrotate.d/nginx-custom`
+- Add the following configuration:
+```
+/var/log/nginx/access.log {
+    daily
+    rotate 7
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        if [ -f /var/run/nginx.pid ]; then
+            kill -USR1 $(cat /var/run/nginx.pid)
+        fi
+    endscript
+}
+```
+
+
+#### Step 3: Test Logrotate Configuration
+- Check configuration syntax: `sudo logrotate -d /etc/logrotate.d/nginx-custom`
+- Force rotation for testing: `sudo logrotate -f /etc/logrotate.d/nginx-custom`
+- Verify rotated files: `ls -lh /var/log/nginx/`
+
+You should see files like:
+```
+access.log
+access.log.1
+access.log.2.gz
+access.log.3.gz
+```
+
+#### Step 4: Verify Automatic Rotation
+Logrotate runs daily via cron (usually at `/etc/cron.daily/logrotate`). To verify:
+- Check cron job: `cat /etc/cron.daily/logrotate`
+- Monitor logs over time: `ls -lh /var/log/nginx/`
+- Check logrotate status: `sudo cat /var/lib/logrotate/status | grep nginx`
