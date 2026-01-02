@@ -1,0 +1,1 @@
+This is shared file for vm1 and vm2
