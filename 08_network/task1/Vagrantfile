@@ -1,0 +1,33 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+
+  config.vm.define "vm81" do |vm81|
+    vm81.vm.network "public_network", ip: "192.168.0.108"
+    
+    vm81.vm.provider "virtualbox" do |vb|
+      vb.memory = "2048"
+      vb.cpus = 2
+      vb.name = "vm81"
+    end
+    
+    vm81.vm.provision "shell", inline: <<-SHELL
+      useradd -m -s /bin/bash user81
+      echo "user81:password81" | chpasswd
+    SHELL
+  end
+
+  config.vm.define "vm82" do |vm82|
+    vm82.vm.network "public_network", ip: "192.168.0.109"
+    
+    vm82.vm.provider "virtualbox" do |vb|
+      vb.memory = "2048"
+      vb.cpus = 2
+      vb.name = "vm82"
+    end
+    
+    vm82.vm.provision "shell", inline: <<-SHELL
+      useradd -m -s /bin/bash user82
+      echo "user82:password82" | chpasswd
+    SHELL
+  end
+end
