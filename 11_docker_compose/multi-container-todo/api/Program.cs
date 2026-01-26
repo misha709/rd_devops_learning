@@ -2,6 +2,7 @@ using System.Text.Json;
 using Api;
 using Api.Models;
 using Api.Extensions;
+using Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -18,6 +19,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "api_cache_";
 });
 
+builder.Services.AddSingleton<IInstanceNameService, InstanceNameService>();
 
 builder.Services.AddCors(options =>
 {
@@ -36,16 +38,23 @@ app.EnsureDatabaseCreated();
 
 app.MapGet("/", () => "Todo API");
 
-app.MapGet("/api/todos", async (AppDbContext db, IDistributedCache cache, CancellationToken cancellationToken) =>
+app.MapGet("/api/instance", async (IInstanceNameService instanceNameService) =>
 {
+    var instanceName = await instanceNameService.GetInstanceNameAsync();
+    return Results.Ok(new { InstanceName = instanceName });
+});
+
+app.MapGet("/api/todos", async (AppDbContext db, IDistributedCache cache, IInstanceNameService instanceNameService, CancellationToken cancellationToken) =>
+{
+    var instanceName = await instanceNameService.GetInstanceNameAsync();
     var cachedTodosJson = await cache.GetStringAsync(AppConstants.TodoCacheKey, cancellationToken);
     if (!string.IsNullOrEmpty(cachedTodosJson))
     {
         var todosFromCache = JsonSerializer.Deserialize<TodoList>(cachedTodosJson);
-        return Results.Ok(todosFromCache);
+        return Results.Ok(todosFromCache with { InstanceName = instanceName });
     }
     var todos = await db.Todos.ToListAsync();
-    var todosList = new TodoList(DateTime.UtcNow, todos);
+    var todosList = new TodoList(DateTime.UtcNow, todos, instanceName);
     
     var todosJson = JsonSerializer.Serialize(todosList);
     await cache.SetStringAsync(AppConstants.TodoCacheKey, todosJson, cancellationToken);

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8082/api/todos';
+const API_URL = 'http://localhost:8081/api/todos';
 
 $(document).ready(function() {
     loadTodos();
@@ -23,6 +23,9 @@ function loadTodos() {
         success: function(todos) {
             console.log(todos.lastUpdated);
             renderTodos(todos.items);
+            if (todos.instanceName) {
+                $('#instance').text('Served by: ' + todos.instanceName);
+            }
         },
         error: function() {
             showStatus('Failed to load todos', 'error');

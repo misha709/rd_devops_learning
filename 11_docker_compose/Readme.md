@@ -68,8 +68,8 @@ docker exec -it <db_container_id> psql -U user -d tododb
 docker-compose up -d --scale api=3
 ```
 
-![Scaled Services](./images/scaled_services.png)
-*Screenshot showing 3 instances of web service running*
+![Scaled App](./images/scaled_app.png)
+![Scaled Containers List](./images/scaled_containers_list.png)
 
 ### Cleanup
 ```bash
