@@ -1,0 +1,50 @@
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - 8081:80
+    volumes:
+      - ./web:/usr/share/nginx/html
+    networks:
+      - netcontainer
+    depends_on:
+      - api
+  api:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    ports:
+      - 8082:8080
+    environment:
+      - ConnectionStrings__Default=Host=db;Port=5432;Database=tododb;Username=user;Password=@pwd@app
+      - ConnectionStrings__Redis=redis:6379
+    networks:
+      - netcontainer
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=@pwd@app
+      - POSTGRES_DB=tododb
+    networks:
+      - netcontainer
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d tododb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:latest
+    networks:
+      - netcontainer
+
+networks:
+  netcontainer:
+
+volumes:
+  db-data:
