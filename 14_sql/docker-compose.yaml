@@ -1,0 +1,13 @@
+services:
+  db:
+    image: mysql:9.6.0
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: SchoolDB
+      MYSQL_ROOT_PASSWORD: P@ssw0rd123
+    volumes:
+      - db_data:/var/lib/mysql
+volumes:
+  db_data:
