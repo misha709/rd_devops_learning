@@ -2,73 +2,83 @@
 
 ## Task 1: Create and configure VPC
 
-### Step 0: Set up Terraform
+### Step 0: Terraform setup
 
-1. Create the base files for your project: `main.tf`, `outputs.tf`, and `variables.tf`.
-2. In `main.tf`, configure the required provider (AWS) and specify your region and other variables as needed.
-3. Initialize your Terraform working directory by running:
-```
-terraform init
-```
+- Create `main.tf`, `outputs.tf`, `variables.tf`.
+- Configure AWS provider and region in `main.tf`.
+- Run: `terraform init`
 
 ### Step 1: Create a new VPC
-Add the following block to your `main.tf` file to define your VPC:
+
+Add to `main.tf`:
+
 ```hcl
 resource "aws_vpc" "mi-vpc" {
   cidr_block = "10.0.0.0/16"
-
   tags = {
     Name    = "mi-rd-vpc"
     project = var.project_tag
   }
 }
 ```
-Apply the configuration to create the VPC:
-```
-terraform apply
-```
 
-Result:
-![Create VPC result](images/vpc_output.png)
+Run: `terraform apply`
+
+![VPC result](images/vpc_output.png)
 
 ### Step 2: Add subnets to VPC
 
-Add the following two subnet resource blocks to your `main.tf` file to define both a public and a private subnet within your VPC, referencing the VPC you created in the previous step:
+Add to `main.tf`:
 
 ```hcl
 resource "aws_subnet" "mi-public-subnet" {
   vpc_id     = aws_vpc.mi-vpc.id
   cidr_block = "10.0.0.0/24"
-
-  tags = {
-    Name    = "mi-rd-public-subnet"
-    project = var.project_tag
-  }
+  tags = { Name = "mi-rd-public-subnet"; project = var.project_tag }
 }
 
 resource "aws_subnet" "mi-private-subnet" {
   vpc_id     = aws_vpc.mi-vpc.id
   cidr_block = "10.0.1.0/24"
-
-  tags = {
-    Name    = "mi-rd-private-subnet"
-    project = var.project_tag
-  }
+  tags = { Name = "mi-rd-private-subnet"; project = var.project_tag }
 }
 ```
 
-Apply your configuration to create the subnets:
+Run: `terraform apply`
+
+![Subnets result](images/create_subnets.png)
+
+### Step 3: Internet Gateway and public routing
+
+Add to `main.tf`: IGW, route table (0.0.0.0/0 → IGW), and route table association for the public subnet.
+
+```hcl
+resource "aws_internet_gateway" "mi-gateway" {
+  vpc_id = aws_vpc.mi-vpc.id
+  tags = { Name = "mi-gateway"; project = var.project_tag }
+}
+
+resource "aws_route_table" "mi-public-rt" {
+  vpc_id = aws_vpc.mi-vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.mi-gateway.id
+  }
+  tags = { Name = "mi-rd-public-rt"; project = var.project_tag }
+}
+
+resource "aws_route_table_association" "mi-public-subnet-assoc" {
+  subnet_id      = aws_subnet.mi-public-subnet.id
+  route_table_id = aws_route_table.mi-public-rt.id
+}
 ```
-terraform apply
-```
 
-Result:
-![Create subnet result](images/create_subnets.png)
+Run: `terraform apply`
 
-### Step 3: Configure Internet Gateway
+![Gateway result](images/add_intenet_gateway.png)
 
-### Step 2: Query Children with Their Institutions and Classes
+---
 
-## Task 2: Configure Security Groups and Network ACLs
-## Task 3: Launch an EC2 Instance
-## Task 4: Assign an Elastic IP (EIP)
+## Task 2: Security Groups and Network ACLs
+## Task 3: Launch EC2 Instance
+## Task 4: Assign Elastic IP (EIP)
