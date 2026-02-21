@@ -28,11 +28,43 @@ Apply the configuration to create the VPC:
 terraform apply
 ```
 
-The image below shows an example of the created VPC:
-
-![alt text](images/vpc_output.png)
+Result:
+![Create VPC result](images/vpc_output.png)
 
 ### Step 2: Add subnets to VPC
+
+Add the following two subnet resource blocks to your `main.tf` file to define both a public and a private subnet within your VPC, referencing the VPC you created in the previous step:
+
+```hcl
+resource "aws_subnet" "mi-public-subnet" {
+  vpc_id     = aws_vpc.mi-vpc.id
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name    = "mi-rd-public-subnet"
+    project = var.project_tag
+  }
+}
+
+resource "aws_subnet" "mi-private-subnet" {
+  vpc_id     = aws_vpc.mi-vpc.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name    = "mi-rd-private-subnet"
+    project = var.project_tag
+  }
+}
+```
+
+Apply your configuration to create the subnets:
+```
+terraform apply
+```
+
+Result:
+![Create subnet result](images/create_subnets.png)
+
 ### Step 3: Configure Internet Gateway
 
 ### Step 2: Query Children with Their Institutions and Classes
