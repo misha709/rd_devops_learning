@@ -1,3 +1,21 @@
 # Vagrant
 .vagrant/
 *.box
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.crash
+.terraform/
+*.tfvars
+*.tfvars.json
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+# Exclude sensitive files that may be generated
+terraform.tfvars
+# Ignore crash logs
+crash.log
