@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: falco
+  namespace: kube-system
+  labels:
+    app: falco
+spec:
+  selector:
+    matchLabels:
+      app: falco
+  template:
+    metadata:
+      labels:
+        app: falco
+        role: security
+    spec:
+      serviceAccountName: falco-account
+      containers:
+        - name: falco
+          image: falcosecurity/falco:latest
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: shared-pipe
+              mountPath: /var/run/falco
+              readOnly: false
+            - name: docker-socket
+              mountPath: /host/var/run/docker.sock
+              readOnly: true
+            - name: dev-fs
+              mountPath: /host/dev
+              readOnly: true
+            - name: proc-fs
+              mountPath: /host/proc
+              readOnly: true
+            - name: boot-fs
+              mountPath: /host/boot
+              readOnly: true
+            - name: lib-modules
+              mountPath: /host/lib/modules
+              readOnly: true
+            - name: user-fs
+              mountPath: /host/usr
+              readOnly: true
+      initContainers:
+        - name: init-pipe
+          image: busybox
+          command:
+            - sh
+            - -c
+            - "mkfifo /var/run/falco/nats"
+          volumeMounts:
+            - name: shared-pipe
+              mountPath: /var/run/falco/
+              readOnly: false
+      volumes:
+        - name: shared-pipe
+          emptyDir: {}
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+        - name: dev-fs
+          hostPath:
+            path: /dev
+        - name: proc-fs
+          hostPath:
+            path: /proc
+        - name: boot-fs
+          hostPath:
+            path: /boot
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+        - name: user-fs
+          hostPath:
+            path: /usr

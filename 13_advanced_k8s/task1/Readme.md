@@ -3,18 +3,10 @@
 
 ## Task 1: Redis StatefulSet Cluster
 
-### Step 1: Create Kind Cluster
+### Prerequisites
+- Kind installed and configured
 
-```powershell
-./kind/CreateKindCluster.ps1
-
-kubectl get nodes
-```
-
-![Created cluster](./images/created-cluster.png)
-
-
-### Step 2: Setup namespace and redis cluster
+### Step 1: Setup namespace and redis cluster
 
 ```powershell
 cd ./k8s
@@ -31,7 +23,7 @@ kubectl apply -f redis-init-job.yml
 ```
 ![redis-init-job logs](./images/redis-init.png)
 
-### Step 3: Test Redis Cluster Data Persistence
+### Step 2: Test Redis Cluster Data Persistence
 
 Set key to redis-0 pod
 
