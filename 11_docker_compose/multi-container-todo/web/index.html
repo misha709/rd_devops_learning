@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Todo List</h1>
+            <div id="instance" class="subtitle has-text-info"></div>
+            <div id="status" class="notification is-hidden"></div>
+            <div class="field has-addons">
+                <div class="control is-expanded">
+                    <input class="input" type="text" id="todoInput" placeholder="Add a new todo...">
+                </div>
+                <div class="control">
+                    <button class="button is-primary" id="addBtn">Add</button>
+                </div>
+            </div>
+            <div class="box">
+                <ul id="todoList"></ul>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

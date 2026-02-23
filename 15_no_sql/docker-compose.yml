@@ -1,0 +1,14 @@
+services:
+  nosql_db:
+    image: mongo:latest
+    container_name: "mongo"
+    ports:
+      - "27017:27017"
+    volumes:
+      - nosql_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: P@ssw0rd!
+
+volumes:
+  nosql_data:
