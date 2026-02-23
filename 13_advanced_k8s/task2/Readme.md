@@ -17,7 +17,7 @@ Create a new Kind cluster for this task:
 kubectl get nodes
 ```
 
-![Created cluster](./images/created-cluster.png)
+![Created cluster](../images/created-cluster.png)
 
 ### Step 1: Deploy Falco DaemonSet
 
@@ -25,6 +25,7 @@ Apply the Falco DaemonSet configuration:
 
 ```powershell
 cd ./k8s
+kubectl apply -f .\falco-account.yaml
 kubectl apply -f .\falco-daemonset.yaml
 ```
 
@@ -45,19 +46,7 @@ View logs from Falco pods to verify they are generating security events:
 kubectl logs -l app=falco -n kube-system
 ```
 
-You should see Falco monitoring events such as:
-- File access events
-- Process creation events
-- Container-related activities
-- System call monitoring
-
 ![Falco logs](./images/falco-logs.png)
-
-To view logs from a specific pod:
-
-```powershell
-kubectl logs <falco-pod-name> -n kube-system
-```
 
 ### Step 4: Monitor Falco Events in Real-Time
 

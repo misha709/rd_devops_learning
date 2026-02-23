@@ -51,6 +51,9 @@ spec:
             - name: user-fs
               mountPath: /host/usr
               readOnly: true
+            - name: kernel-debug-fs
+              mountPath: /sys/kernel/debug
+              readOnly: true
       initContainers:
         - name: init-pipe
           image: busybox
@@ -83,3 +86,6 @@ spec:
         - name: user-fs
           hostPath:
             path: /usr
+        - name: kernel-debug-fs
+          hostPath:
+            path: /sys/kernel/debug
