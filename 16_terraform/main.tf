@@ -32,25 +32,34 @@ module "rd_subnet" {
   }
 }
 
+resource "aws_key_pair" "mi-ec2-key" {
+  key_name   = "mi-rd-ec2-key"
+  public_key = file("${path.module}/.keys/mi-rd-ec2-key.pub")
+
+  tags = {
+    Name = "mi-rd-ec2-key"
+  }
+}
+
 module "ec2_instance_1" {
   source = "./modules/rd_ec2"
 
   subnet_id       = module.rd_subnet.id
-  public_key_path = file("${path.module}/.keys/mi-rd-ec2-key.pub")
+  public_key_name = aws_key_pair.mi-ec2-key.key_name
 
   tags = {
     Name : "EC2_1"
   }
 }
 
-# module "ec2_instance_2" {
-#   source = "./modules/rd_ec2"
+module "ec2_instance_2" {
+  source = "./modules/rd_ec2"
 
-#   instance_type   = "t3.micro"
-#   subnet_id       = module.rd_subnet.id
-#   public_key_path = file("${path.module}/.keys/mi-rd-ec2-key.pub")
+  instance_type   = "t3.micro"
+  subnet_id       = module.rd_subnet.id
+  public_key_name = aws_key_pair.mi-ec2-key.key_name
 
-#   tags = {
-#     Name : "EC2_1"
-#   }
-# }
+  tags = {
+    Name : "EC2_2"
+  }
+}

@@ -9,8 +9,8 @@ variable "subnet_id" {
   type = string
 }
 
-variable "public_key_path" {
-  description = "Path to public key"
+variable "public_key_name" {
+  description = "Public key name for the instance"
   type = string
 }
 
