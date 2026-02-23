@@ -1,10 +1,10 @@
 variable "cidr_block" {
-  description = "Block"
+  description = "VPC CIDR block (e.g. 10.0.0.0/16)."
   type        = string
 }
 
 variable "tags" {
-  description = "Tags"
-  type = map(string)
-  default = {}
+  description = "Tags for the VPC."
+  type        = map(string)
+  default     = {}
 }
