@@ -21,3 +21,14 @@ module "rd_vpc" {
   }
 }
 
+module "rd_subnet" {
+  source = "./modules/rd_subnet"
+
+  vpc_id     = module.rd_vpc.id
+  cidr_block = "10.0.2.0/24"
+
+  tags = {
+    "Name" : "my-rd-subnet"
+  }
+}
+
