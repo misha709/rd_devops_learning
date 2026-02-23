@@ -28,3 +28,11 @@ output "ec2_instance_2" {
     instance_type = module.ec2_instance_2.instance_type
   }
 }
+
+output "bucket" {
+  description = "S3 bucket ID and ARN."
+  value = {
+    id  = aws_s3_bucket.bucket.id
+    arn = aws_s3_bucket.bucket.arn
+  }
+}

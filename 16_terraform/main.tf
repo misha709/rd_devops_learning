@@ -63,3 +63,7 @@ module "ec2_instance_2" {
     Name : "EC2_2"
   }
 }
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "my-rd-bucket-for-import" 
+}

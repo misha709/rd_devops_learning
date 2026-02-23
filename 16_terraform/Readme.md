@@ -39,8 +39,9 @@ After apply, run `terraform output` to see:
 | `subnet_id` | Subnet ID |
 | `ec2_instance_1` | Instance 1 — ID, public IP, type |
 | `ec2_instance_2` | Instance 2 — ID, public IP, type |
+| `bucket` | S3 bucket ID and ARN |
 
-## Task 1: VPC with Servers Using Modules — Done
+## Task 1: VPC with Servers Using Modules
 
 - **VPC module** (`modules/rd_vpc`): Creates VPC with configurable CIDR and tags.
 - **Subnet module** (`modules/rd_subnet`): Creates subnet in a VPC with configurable CIDR and tags.
@@ -51,14 +52,26 @@ After apply, run `terraform output` to see:
 
 ## Task 2: Import Existing Resources
 
-1. Create several resources manually in the AWS Console (e.g. VPC, subnet, EC2).
-2. Add matching `resource` blocks to `.tf` files.
-3. Import each resource:  
-   `terraform import <resource_address> <resource_id>`
-4. Run `terraform plan` and fix any drift so Terraform matches the real infrastructure.
+An S3 bucket (`my-rd-bucket-for-import`) was created manually in the AWS Console, then imported into Terraform:
 
-Example:
+1. Created the bucket manually in AWS Console.
+2. Added a matching `resource` block in `main.tf`:
+
+```hcl
+resource "aws_s3_bucket" "bucket" {
+  bucket = "my-rd-bucket-for-import"
+}
+```
+
+3. Imported the existing bucket into Terraform state:
 
 ```bash
-terraform import aws_vpc.example vpc-0123456789abcdef0
+terraform import aws_s3_bucket.bucket my-rd-bucket-for-import
 ```
+
+4. Ran `terraform plan` — no changes, Terraform matched the real infrastructure.
+
+An output for the bucket was added to `output.tf` (`id` and `arn`).
+
+![Imported bucket](images/import_s3_bucket.png)
+![Updated output with bucket](images/updated_output.png)
