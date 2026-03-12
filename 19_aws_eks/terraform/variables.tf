@@ -3,3 +3,9 @@ variable "aws_region" {
   type        = string
   default     = "eu-west-1"
 }
+
+variable "project_tag" {
+  description = "Tag used to identify resources related to the AWS EKS project"
+  type        = string
+  default     = "rd-19-aws-eks"
+}
