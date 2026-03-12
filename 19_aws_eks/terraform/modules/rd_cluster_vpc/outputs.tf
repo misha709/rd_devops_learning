@@ -1,9 +1,9 @@
-output "arn" {
-  value = aws_vpc.vpc.arn
+output "vpc_id" {
+  value = aws_vpc.rd_mi_vpc.id
 }
 
 output "cidr_block" {
-  value = aws_vpc.vpc.cidr_block
+  value = aws_vpc.rd_mi_vpc.cidr_block
 }
 
 output "subnets" {
