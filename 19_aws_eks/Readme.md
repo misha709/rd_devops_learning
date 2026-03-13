@@ -7,7 +7,8 @@
 ## Step 0 — Prerequisites
 
 - For installing the cluster use `eksctl` — [GitHub](https://github.com/eksctl-io/eksctl)
-- > **Note:** Attempt to set up cluster via Terraform — currently not successful.
+
+> **Note:** Attempt to set up cluster via Terraform — currently not successful.
 
 ---
 
@@ -54,3 +55,35 @@ k get nodes
 ```
 
 ![List of nodes](images/nodes_list.png)
+
+
+---
+
+## Step 3 — Deploy Static Site
+
+Apply site configuration, which includes:
+- **ConfigMap** — provides the static `index.html` content
+- **Deployment** — runs 2 nginx replicas serving the site
+- **Service** (LoadBalancer) — exposes the site via a public AWS ELB
+
+```powershell
+k apply -f ./k8s/site.yaml
+```
+
+![Apply site configuration result](images/apply-site-configuration.png)
+
+Get the external IP from `site-loadbalancer`:
+
+```powershell
+k get svc
+```
+
+![Get services result](images/get_services_result.png)
+
+Verify the site is reachable (replace with your ELB hostname from `k get svc`):
+
+```powershell
+curl http://<elb-hostname>.eu-west-1.elb.amazonaws.com
+```
+
+![Site result](images/site-result.png)
