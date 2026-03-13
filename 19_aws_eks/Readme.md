@@ -184,3 +184,27 @@ k exec ebs-data-writer -- cat /data/log.txt
 ```
 
 ![EBS setup result](images/ebs_setup_result.png)
+
+---
+
+## Step 5 - Run a Task Using a Job
+
+The manifest `k8s/hello-job.yaml`:
+
+```powershell
+k apply -f ./k8s/hello-job.yaml
+```
+
+### Verify the Job completed
+
+```powershell
+k get job hello-eks
+```
+![Job result](images/job_result.png)
+
+Read the output printed by the Job:
+
+```powershell
+k logs -l job-name=hello-eks
+```
+![Job result](images/logs_from_job.png)
