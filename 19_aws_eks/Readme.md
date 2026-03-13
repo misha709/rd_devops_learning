@@ -208,3 +208,79 @@ Read the output printed by the Job:
 k logs -l job-name=hello-eks
 ```
 ![Job result](images/logs_from_job.png)
+
+---
+
+## Step 6 - Deploy a Test Application (ClusterIP)
+
+The manifest `k8s/httpd-clusterip.yaml` contains two resources:
+
+| Resource | Name | Purpose |
+|---|---|---|
+| `Deployment` | `httpd-app` | Runs 2 Apache HTTP Server replicas |
+| `Service` | `httpd-clusterip` | Exposes the app on port 80 inside the cluster only |
+
+> **Note:** `ClusterIP` is the default Service type — the app is reachable only from within the cluster, not from the internet.
+
+```powershell
+k apply -f ./k8s/httpd-clusterip.yaml
+```
+
+### Verify Resources
+
+Check both replicas are running:
+
+```powershell
+k get deployment httpd-app
+k get pods -l app=httpd-app
+```
+
+Check the ClusterIP Service was created:
+
+```powershell
+k get svc httpd-clusterip
+```
+
+### Verify the App is Reachable Inside the Cluster
+
+Spin up a temporary Pod and curl the Service by its DNS name:
+
+```powershell
+k run curl-test --image=curlimages/curl --rm -it --restart=Never -- `
+  curl -s http://httpd-clusterip
+```
+
+Expected output — the default Apache welcome page HTML.
+
+![httpd ClusterIP result](images/httpd_clusterip_result.png)
+
+---
+
+## Step 7 - Work with Namespaces
+
+The manifest `k8s/dev-namespace.yaml` contains two resources:
+
+| Resource | Name | Purpose |
+|---|---|---|
+| `Namespace` | `dev` | Isolates resources from the `default` namespace |
+| `Deployment` | `busybox-sleep` | Runs 5 busybox replicas, each sleeping for 3600 s |
+
+```powershell
+k apply -f ./k8s/dev-namespace.yaml
+```
+
+### Verify Resources
+
+List all Pods in the `dev` namespace — all 5 should be `Running`:
+
+```powershell
+k get pods -n dev
+```
+
+Confirm the Deployment status:
+
+```powershell
+k get deployment -n dev busybox-sleep
+```
+
+![Result work with namespace](images/work_with_namespace.png)
