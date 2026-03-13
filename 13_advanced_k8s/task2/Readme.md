@@ -141,23 +141,11 @@ kubectl run binary-test --image=busybox --restart=Never --rm -- sh -c "/bin/sh -
 
 #### Viewing Events
 
-Falco events appear in the logs with format:
-```
-HH:MM:SS.microseconds: Severity Message (key=value key=value ...)
-```
-
-Example Falco log output:
 ```
 13:36:45.123456789: Notice A shell was spawned in a container (user=root user_loginuid=-1 container_id=abc123 container_name=k8s_shell-test image=busybox:latest)
 13:36:46.234567890: Warning File below /etc opened for writing (user=root file=/etc/test.txt)
 13:36:47.345678901: Notice Launch privileged container (user=root container_id=def456 image=busybox:latest)
 ```
-
-**Note**: If you don't see events immediately:
-1. Ensure you're watching logs with `-f` flag
-2. Events go to stderr, so make sure you're capturing both stdout and stderr
-3. Some rules may require specific conditions - try multiple actions
-4. Check Falco is running: `kubectl get pods -l app=falco -n kube-system`
 
 ### Configuration Details
 
@@ -179,85 +167,6 @@ The Falco DaemonSet is configured with:
 4. **Resource Limits**:
    - CPU: 100m (request and limit)
    - Memory: 128Mi request, 256Mi limit
-
-### Troubleshooting
-
-#### Falco Not Showing Events
-
-If Falco is running but not showing security events in logs:
-
-1. **Verify Falco is capturing events**: Check if Falco is actually monitoring by looking for startup messages:
-   ```powershell
-   kubectl logs -l app=falco -n kube-system | Select-String -Pattern "Opening|Enabled event sources"
-   ```
-   You should see: `Opening 'syscall' source with modern BPF probe` and `Enabled event sources: syscall`
-
-2. **Check Falco is monitoring containers**: Falco needs to see container activity. Verify containers are running:
-   ```powershell
-   kubectl get pods --all-namespaces
-   ```
-
-3. **Use the correct log command**: Falco outputs events to stderr. Use:
-   ```powershell
-   # This captures both stdout and stderr
-   kubectl logs -l app=falco -n kube-system -f
-   ```
-
-4. **Try the most reliable trigger**: The "shell spawned in container" rule is the most reliable:
-   ```powershell
-   kubectl run test-shell --image=busybox --restart=Never --rm -- sh -c "sh"
-   ```
-   This should immediately trigger: `Notice A shell was spawned in a container`
-
-5. **Check Falco rules are loaded**: Verify rules are loaded correctly:
-   ```powershell
-   kubectl logs -l app=falco -n kube-system | Select-String -Pattern "rules|schema validation"
-   ```
-   Should show: `Loading rules from:` and `schema validation: ok`
-
-6. **Verify container detection**: Falco needs to detect containers. Check if it's seeing containers:
-   ```powershell
-   kubectl exec -it $(kubectl get pod -l app=falco -n kube-system -o jsonpath='{.items[0].metadata.name}') -n kube-system -- falco --list-syscall-events 2>&1 | head -20
-   ```
-
-7. **Check for errors**: Look for any errors in Falco logs:
-   ```powershell
-   kubectl logs -l app=falco -n kube-system | Select-String -Pattern "Error|error|ERROR|Failed|failed"
-   ```
-
-#### eBPF Tracepoint Warnings
-
-In Kind clusters, you may see warnings like:
-```
-libbpf: failed to determine tracepoint 'syscalls/sys_enter_connect' perf event ID: No such file or directory
-libpman: failure while attaching TOCTOU mitigation program...
-```
-
-**These warnings are expected** in Kind environments because:
-- Kind nodes run in containers and don't have direct access to host kernel tracepoints
-- Falco detection **still works correctly** - it's just that TOCTOU (Time-of-Check-Time-of-Use) mitigation isn't available
-- The errors state: "Detection will continue to work, but TOCTOU mitigation may be disabled"
-
-This is normal for Kind clusters and doesn't affect Falco's core security monitoring capabilities.
-
-#### Pod Startup Issues
-
-If Falco pods are not starting:
-
-1. Check pod status:
-   ```powershell
-   kubectl describe pod -l app=falco -n kube-system
-   ```
-
-2. Verify node resources:
-   ```powershell
-   kubectl top nodes
-   ```
-
-3. Check for permission issues:
-   ```powershell
-   kubectl get events -n kube-system --sort-by='.lastTimestamp'
-   ```
 
 ### Cleanup
 
