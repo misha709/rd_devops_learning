@@ -284,3 +284,25 @@ k get deployment -n dev busybox-sleep
 ```
 
 ![Result work with namespace](images/work_with_namespace.png)
+
+---
+
+## Step 8 - Cleanup Resources
+
+Delete all Kubernetes manifests applied during this project:
+
+```powershell
+k delete -f ./k8s/dev-namespace.yaml
+k delete -f ./k8s/httpd-clusterip.yaml
+k delete -f ./k8s/hello-job.yaml
+k delete -f ./k8s/ebs-storage.yaml
+k delete -f ./k8s/site.yaml
+```
+
+Delete the EKS cluster and all associated node groups:
+
+```powershell
+eksctl delete cluster `
+  --name rd-mi-cluster `
+  --region eu-west-1
+```
