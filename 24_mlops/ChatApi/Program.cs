@@ -3,7 +3,21 @@ using ChatApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpClient<IAiService, GeminiService>();
+var aiProvider = builder.Configuration["AiProvider"]
+    ?? throw new InvalidOperationException("AiProvider is not configured. Set 'AiProvider' to 'Gemini' or 'Ollama' in appsettings.");
+
+switch (aiProvider.ToLowerInvariant())
+{
+    case "gemini":
+        builder.Services.AddHttpClient<IAiService, GeminiService>();
+        break;
+    case "ollama":
+        builder.Services.AddHttpClient<IAiService, OllamaService>();
+        break;
+    default:
+        throw new InvalidOperationException($"Unknown AiProvider '{aiProvider}'. Valid values are 'Gemini' or 'Ollama'.");
+}
+
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
