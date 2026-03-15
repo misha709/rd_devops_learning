@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .info { margin: 10px 0; }
+        .label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ site_title }}</h1>
+        <div class="info">
+            <span class="label">Server:</span> {{ ansible_hostname }}
+        </div>
+        <div class="info">
+            <span class="label">IP:</span> {{ ansible_default_ipv4.address }}
+        </div>
+        <div class="info">
+            <span class="label">OS:</span> {{ ansible_distribution }} {{ ansible_distribution_version }}
+        </div>
+        <div class="info">
+            <span class="label">Managed by:</span> Ansible
+        </div>
+    </div>
+</body>
+</html>

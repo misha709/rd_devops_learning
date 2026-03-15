@@ -9,7 +9,7 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_security_group" "web_servers" {
-  name        = "ansible-web-servers-sg"
+  name        = "rd-ansible-lab-sg"
 
   ingress {
     from_port   = 22
@@ -33,13 +33,13 @@ resource "aws_security_group" "web_servers" {
   }
 
   tags = {
-    Name    = "rd-web-servers-sg"
+    Name    = "rd-ansible-lab-sg"
     Project = var.project_tag
   }
 }
 
 resource "aws_key_pair" "key" {
-  key_name   = "rd-web-key"
+  key_name   = "rd-ansible-lab-key"
   public_key = file("../.ssh/rd-web-key.pub")
 }
 
@@ -52,7 +52,7 @@ resource "aws_instance" "web" {
   vpc_security_group_ids = [aws_security_group.web_servers.id]
 
   tags = {
-    Name    = "rd-web-server-${count.index + 1}"
+    Name    = "rd-ansible-lab-${count.index + 1}"
     Project = var.project_tag
     Ansible = "true"
     Role    = "web"
