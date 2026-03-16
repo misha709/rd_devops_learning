@@ -1,0 +1,7 @@
+---
+- name: Configure security
+  hosts: role_web
+  become: yes
+  roles:
+    - baseline
+    - firewall

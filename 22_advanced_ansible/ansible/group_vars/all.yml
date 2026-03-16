@@ -1,0 +1,6 @@
+---
+# Site configuration
+site_title: "My website"
+
+# SSH keys (example - replace with your actual public key)
+# deploy_ssh_public_key: "ssh-rsa AAAA..."

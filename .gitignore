@@ -20,5 +20,6 @@ terraform.tfvars
 # Ignore crash logs
 crash.log
 
+.ssh
 .keys
 .env
