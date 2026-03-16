@@ -1,0 +1,195 @@
+Parameters:
+  VpcCidrBlock:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: The VPC CIDR block.
+  SubnetCidrBlock:
+    Type: String
+    Default: 10.0.1.0/24
+    Description: The Subnet CIDR block.
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-east-1a
+    Description: The availability zone for the subnet.
+  ImageIdParameter:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: The AMI ID to use for the EC2 instance (automatically fetches latest Amazon Linux 2).
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    Description: The EC2 instance type.
+Resources:
+  # ========== VPC Resources ==========
+  MiRdVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: MiRdVpc
+  
+  MiRdSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref SubnetCidrBlock
+      VpcId: !Ref MiRdVpc
+      AvailabilityZone: !Ref AvailabilityZone
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: MiRdSubnet
+  
+  MiRdInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: MiRdInternetGateway
+  
+  MiRdVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MiRdVpc
+      InternetGatewayId: !Ref MiRdInternetGateway
+  
+  MiRdRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MiRdVpc
+      Tags:
+        - Key: Name
+          Value: MiRdRouteTable
+  
+  MiRdInternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: MiRdVPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref MiRdRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MiRdInternetGateway
+  
+  MiRdSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MiRdSubnet
+      RouteTableId: !Ref MiRdRouteTable
+
+  # ========== Security Group ==========
+  MiRdSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EC2 instance
+      VpcId: !Ref MiRdVpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: MiRdSecurityGroup
+
+  # ========== EC2 Resources ==========
+  MiRdEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageIdParameter
+      InstanceType: !Ref InstanceTypeParameter
+      IamInstanceProfile: !Ref MiRdEc2InstanceProfile
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref MiRdSubnet
+          GroupSet:
+            - !Ref MiRdSecurityGroup
+      Tags:
+        - Key: Name
+          Value: MiRdEc2Instance
+  
+  # ========== IAM Role ==========
+  MiRdEc2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-EC2-S3ReadOnly-Role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Tags:
+        - Key: Name
+          Value: MiRdEc2InstanceRole
+  
+  MiRdEc2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref MiRdEc2InstanceRole
+      InstanceProfileName: !Sub "${AWS::StackName}-EC2-InstanceProfile"
+
+  # ========== S3 Bucket ==========
+  MiRdS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-bucket-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: MiRdS3Bucket
+  
+  MiRdS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MiRdS3
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub "${MiRdS3.Arn}/*"
+              - !GetAtt MiRdS3.Arn
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+          - Sid: AllowEC2RoleAccess
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt MiRdEc2InstanceRole.Arn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+            Resource:
+              - !Sub "${MiRdS3.Arn}/*"
+              - !GetAtt MiRdS3.Arn
+
+Outputs:
+  EC2PublicIP:
+    Description: Public IP address of the EC2 instance
+    Value: !GetAtt MiRdEc2.PublicIp
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2-PublicIP"
+
+  S3BucketName:
+    Description: Name of the created S3 bucket
+    Value: !Ref MiRdS3
+    Export:
+      Name: !Sub "${AWS::StackName}-S3-BucketName"
