@@ -1,0 +1,27 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+**/*.user
+**/*.suo
+
+# Environment
+.env
+**/appsettings.Development.json
+
+# IDE
+.vscode/
+.vs/
+.idea/
+
+# Docker
+**/docker-compose.override.yml
+
+# Go artifacts (if any)
+*.exe
+*.dll
+*.dylib
+go.work
+
+# OS
+.DS_Store
+Thumbs.db
