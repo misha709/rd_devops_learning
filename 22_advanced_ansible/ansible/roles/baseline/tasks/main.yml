@@ -1,0 +1,30 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install base packages
+  apt:
+    name:
+      - vim
+      - git
+      - mc
+      - ufw
+      - curl
+      - htop
+    state: present
+
+- name: Disable root SSH login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
+  notify: Restart SSH
+
+- name: Add deploy SSH key
+  authorized_key:
+    user: ubuntu
+    state: present
+    key: "{{ deploy_ssh_public_key }}"
+  when: deploy_ssh_public_key is defined
