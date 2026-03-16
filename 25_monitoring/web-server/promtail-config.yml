@@ -1,0 +1,42 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://MONITORING_SERVER_PRIVATE_IP:3100/loki/api/v1/push
+
+scrape_configs:
+  # Nginx access logs
+  - job_name: nginx-access
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          host: web-server
+          log_type: access
+          __path__: /var/log/nginx/access.log
+
+  # Nginx error logs
+  - job_name: nginx-error
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          host: web-server
+          log_type: error
+          __path__: /var/log/nginx/error.log
+
+  # System logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          host: web-server
+          __path__: /var/log/syslog
