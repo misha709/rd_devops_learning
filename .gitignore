@@ -21,3 +21,5 @@ terraform.tfvars
 crash.log
 
 .ssh
+.keys
+.env

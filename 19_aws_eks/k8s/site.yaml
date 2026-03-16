@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: site-index-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <title>EKS Cluster Demo Website</title>
+    </head>
+    <body>
+      <h1>Hello World!</h1>
+      <h3>This is a static website running on Kubernetes (EKS) cluster.</h3>
+      <p>This website is deployed using a ConfigMap and a Deployment.</p>
+      <p>The website is served by an Nginx container.</p>
+    </body>
+    </html>
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-site
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: static-site
+  template:
+    metadata:
+      labels:
+        app: static-site
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html
+          configMap:
+            name: site-index-html
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: site-loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    app: static-site
+  ports:
+    - port: 80
+      targetPort: 80

@@ -1,0 +1,53 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+parameters:
+  type: gp3
+  encrypted: "true"
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ebs-sc
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ebs-data-writer
+spec:
+  containers:
+    - name: data-writer
+      image: busybox:latest
+      command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Starting data writer...";
+          while true; do
+            echo "$(date): Hello from EBS persistent storage" >> /data/log.txt;
+            echo "Last write: $(date)" > /data/status.txt;
+            sleep 10;
+          done
+      volumeMounts:
+        - name: ebs-data
+          mountPath: /data
+  volumes:
+    - name: ebs-data
+      persistentVolumeClaim:
+        claimName: ebs-data-pvc
+  restartPolicy: Always
